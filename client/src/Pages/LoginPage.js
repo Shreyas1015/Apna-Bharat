@@ -105,13 +105,10 @@ const LoginPage = () => {
       const decryptedUserType = secureLocalStorage.getItem("user_type");
 
       if (decryptedUserType === 1) {
-
         navigate(`/customer-dashboard?uid=${encryptedUID}`);
       } else if (decryptedUserType === 2) {
-
         navigate(`/seller-dashboard?uid=${encryptedUID}`);
       } else if (decryptedUserType === 3) {
-
         navigate(`/admin-dashboard?uid=${encryptedUID}`);
       }
       alert("Logged In Successfully");

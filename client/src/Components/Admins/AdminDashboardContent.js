@@ -4,8 +4,7 @@ import axiosInstance from "../../API/axiosInstance";
 import secureLocalStorage from "react-secure-storage";
 import CustomerHeader from "./CustomerHeader";
 
-
-const CustomerDashboardContent = () => {
+const AdminDashboardContent = () => {
   const [headphonesData, setHeadphonesData] = useState([]);
   const [wishlistedProducts, setWishlistedProducts] = useState([]);
   const navigate = useNavigate();
@@ -103,12 +102,10 @@ const CustomerDashboardContent = () => {
     <>
       <div className="container-fluid">
         <CustomerHeader pageName="Customer Dashboard" />
-        <div className="row">
-
-        </div>
+        <div className="row"></div>
       </div>
     </>
   );
 };
 
-export default CustomerDashboardContent;
+export default AdminDashboardContent;

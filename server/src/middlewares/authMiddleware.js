@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const pool = require("../config/dbConfig");
 const generateSecretKey = require("../utils/generateSecretKey");
 const generateRefreshSecretKey = require("../utils/generateRefreshSecretKey");
-
 const secretKey = process.env.DB_SECRET_KEY || generateSecretKey();
 
 const refreshSecretKey =

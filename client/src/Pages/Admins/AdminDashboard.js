@@ -1,7 +1,7 @@
 import React from "react";
 import CustomersSidebar from "../../Components/Customers/CustomersSidebar";
 import { useNavigate } from "react-router-dom";
-import HeadphonesContent from "../../Components/Customers/CustomerDashboardContent";
+
 
 const AdminDashboard = () => {
     const uid = localStorage.getItem("@secure.n.uid");
@@ -26,7 +26,7 @@ const AdminDashboard = () => {
 
     return (
         <>
-            <CustomersSidebar component={<HeadphonesContent />} />
+            <CustomersSidebar component={"Admin Dashboard"} />
         </>
     );
 };
