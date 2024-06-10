@@ -1,6 +1,5 @@
 require("dotenv").config();
 const asyncHand = require("express-async-handler");
-const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const generateSecretKey = require("../utils/generateSecretKey");
 const pool = require("../config/dbConfig");
@@ -12,19 +11,19 @@ const secretKey = process.env.DB_SECRET_KEY || generateSecretKey();
 console.log("SecretKey :", secretKey);
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  service: "gmail",
   port: 465,
   secure: true,
-  logger: true,
-  debug: true,
+  logger: false,
+  debug: false,
   securepool: false,
   auth: {
-    user: 'triptotours.com@gmail.com',
-    pass: 'vdgg zkjt ugxk xwso',
+    user: "triptotours.com@gmail.com",
+    pass: "vdgg zkjt ugxk xwso",
   },
   tls: {
-    rejectUnauthorized: true
-  }
+    rejectUnauthorized: true,
+  },
 });
 
 function generateOTP() {
@@ -77,7 +76,7 @@ const login = asyncHand((req, res) => {
         const user_type = user.user_type;
 
         const token = jwt.sign({ email: email }, secretKey, {
-          expiresIn: "1h",
+          expiresIn: "10h",
         });
 
         console.log("Generated Token:", token);
@@ -114,7 +113,7 @@ const refresh = asyncHand((req, res) => {
 
   console.log("Received Refresh Token:", refreshToken);
 
-  const token = jwt.sign(user, secretKey, { expiresIn: "1h" });
+  const token = jwt.sign(user, secretKey, { expiresIn: "10h" });
   const newRefreshToken = generateRefreshToken(user.email);
 
   console.log("New Access Token:", token);
@@ -205,7 +204,8 @@ const sendLoginEmailVerification = asyncHand(async (req, res) => {
 const confirmEmail = asyncHand(async (req, res) => {
   const { email, emailOtp } = req.body;
   // Verify the sent OTP
-  const verifyEmailOTPQuery = "SELECT * FROM email_verification_otps WHERE email = $1 AND otp = $2 AND created_at >= NOW() - INTERVAL '15 minutes'::interval";
+  const verifyEmailOTPQuery =
+    "SELECT * FROM email_verification_otps WHERE email = $1 AND otp = $2 AND created_at >= NOW() - INTERVAL '15 minutes'::interval";
 
   try {
     pool.query(
@@ -232,9 +232,6 @@ const confirmEmail = asyncHand(async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
-
-
-
 
 // const sendPhoneVerification = asyncHand(async (req, res) => {
 //   const { phone } = req.body;
@@ -281,15 +278,10 @@ const signUp = asyncHand(async (req, res) => {
 
       // User does not exist, proceed with insertion
       const insertUserQuery =
-        "INSERT INTO users (name, email, phone_number, user_type) VALUES ($1, $2, $3, $4)";
+        "INSERT INTO users (name, email, phone_number, user_type) VALUES ($1, $2, $3, 1)";
       pool.query(
         insertUserQuery,
-        [
-          formData.name,
-          formData.email,
-          formData.phone_number,
-          formData.user_type,
-        ],
+        [formData.name, formData.email, formData.phone_number],
         (err, userResult) => {
           if (err) {
             return handleServerError(
@@ -334,5 +326,5 @@ module.exports = {
   sendLoginEmailVerification,
   refresh,
   logout,
-  imageAuthenticator
+  imageAuthenticator,
 };

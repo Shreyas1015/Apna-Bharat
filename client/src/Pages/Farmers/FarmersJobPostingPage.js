@@ -1,9 +1,9 @@
 import React from "react";
+import UserSidebar from "../../Components/UserSidebar";
+import FarmersJobPostingContent from "../../Components/Farmers/FarmersJobPostingContent";
 import { useNavigate } from "react-router-dom";
-import AdminSidebar from "../../Components/Admins/AdminSidebar";
-import AdminDashboardContent from "../../Components/Admins/AdminDashboardContent";
 
-const AdminDashboard = () => {
+const FarmersJobPostingPage = () => {
   const uid = localStorage.getItem("@secure.n.uid");
   const navigate = useNavigate();
 
@@ -23,12 +23,11 @@ const AdminDashboard = () => {
       </>
     );
   }
-
   return (
-    <>
-      <AdminSidebar component={<AdminDashboardContent />} />
-    </>
+    <div>
+      <UserSidebar component={<FarmersJobPostingContent />} />
+    </div>
   );
 };
 
-export default AdminDashboard;
+export default FarmersJobPostingPage;

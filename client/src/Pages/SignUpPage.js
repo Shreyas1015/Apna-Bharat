@@ -4,20 +4,15 @@ import axiosInstance from "../API/axiosInstance";
 
 const SignUpPage = () => {
   const navigate = useNavigate();
-  const [showUserTypePopup, setShowUserTypePopup] = useState(true);
-  const [selectedUserType, setSelectedUserType] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone_number: "",
     emailOtp: "",
-    // phoneOtp: "",
-    user_type: "",
+    phoneOtp: "",
   });
-
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,12 +84,6 @@ const SignUpPage = () => {
   //   }
   // };
 
-  const handleUserTypeSelection = (userType) => {
-    setSelectedUserType(userType);
-    setFormData((prevState) => ({ ...prevState, user_type: userType }));
-    setShowUserTypePopup(false);
-  };
-
   const handleSignupWithVerification = async (e) => {
     e.preventDefault();
 
@@ -147,60 +136,6 @@ const SignUpPage = () => {
             alt=""
             style={{ height: "100vh" }}
           />
-          {showUserTypePopup && (
-            <div className="user-type-overlay">
-              <div className="user-type-popup">
-                <h3>Select User Type</h3>
-                <div className="user-type-options row text-center">
-                  <div
-                    className="user-type-option col-lg-6"
-                    onClick={() => handleUserTypeSelection(1)}
-                  >
-                    <div className="card" style={{ width: "18rem" }}>
-                      <img
-                        src="/Images/avatar (3).png"
-                        className="card-img-top img-fluid"
-                        alt=""
-                      />
-                      <div className="card-body">
-                        <p className="card-text">Customer</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="user-type-option col-lg-6"
-                    onClick={() => handleUserTypeSelection(2)}
-                  >
-                    <div className="card" style={{ width: "18rem" }}>
-                      <img
-                        src="/Images/avatar (1).jpeg"
-                        className="card-img-top img-fluid"
-                        alt=""
-                      />
-                      <div className="card-body">
-                        <p className="card-text">Seller</p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* <div
-                    className="user-type-option col-lg-4"
-                    onClick={() => handleUserTypeSelection("Vendor")}
-                  >
-                    <div className="card" style={{ width: "18rem" }}>
-                      <img
-                        src="/Images/avatar (2).jpeg"
-                        className="card-img-top img-fluid"
-                        alt=""
-                      />
-                      <div className="card-body">
-                        <p className="card-text">Vendor</p>
-                      </div>
-                    </div>
-                  </div> */}
-                </div>
-              </div>
-            </div>
-          )}
           <div className="col-lg-6 m-0 p-0"></div>
           <div className="col-lg-6 m-0 p-0">
             <form
@@ -293,7 +228,15 @@ const SignUpPage = () => {
                         id="phone_number"
                         placeholder="Enter your phone number"
                         required
-                        onChange={handleChange}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (
+                            value === "" ||
+                            (/^\d+$/.test(value) && value.length <= 10)
+                          ) {
+                            handleChange(e);
+                          }
+                        }}
                         value={formData.phone_number}
                       />
                       {/* <button
@@ -306,7 +249,6 @@ const SignUpPage = () => {
                     </div>
                   </div>
                 </div>
-
                 {/* <div className="mb-3">
                   <label htmlFor="phoneOtp" className="form-label">
                     Phone OTP:
@@ -322,7 +264,6 @@ const SignUpPage = () => {
                     required
                   />
                 </div> */}
-
                 <div className="mb-1">
                   <h5 className="text-danger">
                     {errorMessage && (

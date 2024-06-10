@@ -15,7 +15,7 @@ router.post("/login", login);
 
 router.post("/refresh", refresh);
 router.post("/logout", logout);
-router.post("/image-authenticator", imageAuthenticator);
+router.post("/imageAuthenticator", imageAuthenticator);
 router.post("/signup_with_verification", signUp);
 // router.post("/sendPhoneVerification", sendPhoneVerification);
 router.post("/sendEmailVerification", sendEmailVerification);

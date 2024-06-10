@@ -80,14 +80,17 @@ const authenticateUser = async (req, res, next) => {
   const UserIDFromBody = parseInt(req.body.decryptedUID);
   const UserIDFromQuery = parseInt(req.query.decryptedUID);
 
+  console.log("IDSSSS :", UserIDFromBody, UserIDFromQuery);
+
   const authenticatedUserID = req.uid;
   console.log("authenticatedUserID: ", authenticatedUserID);
 
   if (
-    (UserIDFromBody && authenticatedUserID === UserIDFromBody) ||
-    (UserIDFromQuery && authenticatedUserID === UserIDFromQuery)
+    (UserIDFromBody && authenticatedUserID == UserIDFromBody) ||
+    (UserIDFromQuery && authenticatedUserID == UserIDFromQuery)
   ) {
     console.log("User authenticated successfully");
+    3;
     next();
   } else {
     console.log("Forbidden - Access denied");

@@ -63,7 +63,6 @@ const LoginPage = () => {
     }
   };
 
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -95,22 +94,21 @@ const LoginPage = () => {
 
       const userId = loginRes.data.uid;
       const userType = loginRes.data.user_type;
-      const isLogin = loginRes.data.isLogin;
 
       secureLocalStorage.setItem("uid", userId);
       secureLocalStorage.setItem("user_type", userType);
-      secureLocalStorage.setItem("isLogin", isLogin);
 
       const encryptedUID = localStorage.getItem("@secure.n.uid");
       const decryptedUserType = secureLocalStorage.getItem("user_type");
 
       if (decryptedUserType === 1) {
-        navigate(`/customer-dashboard?uid=${encryptedUID}`);
+        navigate(`/user-profile?uid=${encryptedUID}`);
       } else if (decryptedUserType === 2) {
-        navigate(`/seller-dashboard?uid=${encryptedUID}`);
-      } else if (decryptedUserType === 3) {
         navigate(`/admin-dashboard?uid=${encryptedUID}`);
+      } else {
+        navigate(`/not-found`);
       }
+
       alert("Logged In Successfully");
     } catch (error) {
       console.error(error);

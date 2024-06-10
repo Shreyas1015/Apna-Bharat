@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import AdminSidebar from "../../Components/Admins/AdminSidebar";
-import AdminDashboardContent from "../../Components/Admins/AdminDashboardContent";
+import UserSidebar from "../Components/UserSidebar";
+import UserProfile from "../Components/UserProfile";
 
-const AdminDashboard = () => {
+const UserProfilePage = () => {
   const uid = localStorage.getItem("@secure.n.uid");
   const navigate = useNavigate();
 
@@ -26,9 +26,9 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <AdminSidebar component={<AdminDashboardContent />} />
+      <UserSidebar component={<UserProfile />} />
     </>
   );
 };
 
-export default AdminDashboard;
+export default UserProfilePage;

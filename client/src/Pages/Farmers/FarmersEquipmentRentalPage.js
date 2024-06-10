@@ -1,9 +1,9 @@
 import React from "react";
-import CustomersSidebar from "../../Components/Customers/CustomersSidebar";
+import UserSidebar from "../../Components/UserSidebar";
+import FarmersEquipmentRentalContent from "../../Components/Farmers/FarmersEquipmentRentalContent";
 import { useNavigate } from "react-router-dom";
-import CustomerDashboardContent from "../../Components/Customers/CustomerDashboardContent";
 
-const CustomerDashboard = () => {
+const FarmersEquipmentRentalPage = () => {
   const uid = localStorage.getItem("@secure.n.uid");
   const navigate = useNavigate();
 
@@ -23,12 +23,11 @@ const CustomerDashboard = () => {
       </>
     );
   }
-
   return (
-    <>
-      <CustomersSidebar component={<CustomerDashboardContent />} />
-    </>
+    <div>
+      <UserSidebar component={<FarmersEquipmentRentalContent />} />
+    </div>
   );
 };
 
-export default CustomerDashboard;
+export default FarmersEquipmentRentalPage;
