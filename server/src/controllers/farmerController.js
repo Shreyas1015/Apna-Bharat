@@ -111,7 +111,8 @@ const sendProfileUpdateEmailVerification = asyncHand(async (req, res) => {
 const fetchFarmersProfileData = asyncHand((req, res) => {
   authenticateUser(req, res, () => {
     const { decryptedUID } = req.body;
-    const searchQuery = "select * from users where uid = $1";
+    const searchQuery =
+      "select * from users join user_profiles on users.uid = user_profiles.uid where users.uid = $1";
 
     pool.query(searchQuery, [decryptedUID], (err, result) => {
       if (err) {
@@ -314,8 +315,141 @@ const fetchFarmersFarmData = asyncHand((req, res) => {
   });
 });
 
+const farmerJobForm = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID, fullFormData } = req.body;
+
+    const insertQuery =
+      "INSERT INTO jobs (uid, jobTitle, jobDescription, jobLocation, startDate, endDate, workingHours, wageSalary, qualificationsSkills, applicationDeadline, aadharCard, kissanCard) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)";
+
+    const insertValues = [
+      decryptedUID,
+      fullFormData.jobTitle,
+      fullFormData.jobDescription,
+      fullFormData.jobLocation,
+      fullFormData.startDate,
+      fullFormData.endDate,
+      fullFormData.workingHours,
+      fullFormData.wageSalary,
+      fullFormData.qualificationsSkills,
+      fullFormData.applicationDeadline,
+      fullFormData.aadharCard,
+      fullFormData.kisanCreditCard,
+    ];
+
+    pool.query(insertQuery, insertValues, (err, result) => {
+      if (err) {
+        console.error(`Error inserting job form data: ${err}`);
+        return res.status(500).json({ error: "Server Error" });
+      } else {
+        return res.status(200).json({ message: "Form Submitted" });
+      }
+    });
+  });
+});
+
+const getAllJobs = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID } = req.body;
+    const query = "SELECT * FROM jobs WHERE uid = $1";
+    pool.query(query, [decryptedUID], (err, result) => {
+      if (err) {
+        console.error(`Error fetching all jobs: ${err}`);
+        return res.status(500).json({ error: "Server Error" });
+      } else {
+        return res.status(200).json(result.rows);
+      }
+    });
+  });
+});
+
+const deleteJob = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID, jobId } = req.body;
+    const deleteQuery = "DELETE FROM jobs WHERE uid = $1 AND jid = $2";
+    pool.query(deleteQuery, [decryptedUID, jobId], (err, result) => {
+      if (err) {
+        console.error(`Error deleting job: ${err}`);
+        return res.status(500).json({ error: "Server Error" });
+      } else if (result.rowCount === 0) {
+        return res
+          .status(404)
+          .json({ message: "Job not found or unauthorized access" });
+      } else {
+        return res.status(200).json({ message: "Job Deleted" });
+      }
+    });
+  });
+});
+
+const updateJobDetails = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID, jid, job } = req.body;
+    console.log("Job Details = ", job);
+    const updateQuery =
+      "UPDATE jobs SET jobTitle = $1, jobDescription = $2, jobLocation = $3, startDate = $4, endDate = $5, workingHours = $6, wageSalary = $7, qualificationsSkills = $8, applicationDeadline = $9, aadharCard = $10, kissanCard = $11 WHERE uid = $12 AND jid = $13";
+    pool.query(
+      updateQuery,
+      [
+        job.jobtitle,
+        job.jobdescription,
+        job.joblocation,
+        job.startdate,
+        job.enddate,
+        job.workinghours,
+        job.wagesalary,
+        job.qualificationsskills,
+        job.applicationdeadline,
+        job.aadharcard,
+        job.kissancard,
+        decryptedUID,
+        jid,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error(`Error updating job details: ${err}`);
+          return res.status(500).json({ error: "Server Error" });
+        } else {
+          return res.status(200).json({ message: "Job Details Updated" });
+        }
+      }
+    );
+  });
+});
+
+const fetchParticularJobDetails = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID, jid } = req.body;
+    const query =
+      "SELECT * FROM jobs join users on jobs.uid = users.uid WHERE jobs.uid = $1 AND jobs.jid = $2";
+    pool.query(query, [decryptedUID, jid], (err, result) => {
+      if (err) {
+        console.error(`Error fetching job details: ${err}`);
+        return res.status(500).json({ error: "Server Error" });
+      } else {
+        return res.status(200).json(result.rows[0]);
+      }
+    });
+  });
+});
+
+const updateJobStatus = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID, jid } = req.body;
+    const updateQuery =
+      "UPDATE jobs SET status = 1 WHERE uid = $2 AND jid = $3";
+    pool.query(updateQuery, [decryptedUID, jid], (err, result) => {
+      if (err) {
+        console.error(`Error updating job status: ${err}`);
+        return res.status(500).json({ error: "Server Error" });
+      }
+    });
+  });
+});
+
 module.exports = {
   drivers_document_auth,
+  farmerJobForm,
   updateFarmersAddress,
   sendProfileUpdateEmailVerification,
   fetchFarmersProfileData,
@@ -325,4 +459,9 @@ module.exports = {
   fetchFarmersAddress,
   updateFarmersFarmDetails,
   fetchFarmersFarmData,
+  getAllJobs,
+  deleteJob,
+  updateJobDetails,
+  fetchParticularJobDetails,
+  updateJobStatus,
 };

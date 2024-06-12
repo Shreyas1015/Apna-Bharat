@@ -70,6 +70,7 @@
   color: #0bbfe0;
   width: 24rem;
 }
+
 .signup-text {
   color: #0bbfe0;
   width: 27rem;
@@ -190,23 +191,27 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.7); /* White background with opacity */
-  backdrop-filter: blur(5px); /* Blur effect for supported browsers */
+  background: rgba(255, 255, 255, 0.7);
+  /* White background with opacity */
+  backdrop-filter: blur(5px);
+  /* Blur effect for supported browsers */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* High z-index to cover other elements */
+  z-index: 9999;
+  /* High z-index to cover other elements */
 }
 
 .loading-content {
   position: relative;
-  z-index: 10000; /* Ensure the loading text appears above the backdrop */
+  z-index: 10000;
+  /* Ensure the loading text appears above the backdrop */
 }
 
 .sidebar-submenu button {
   display: block;
   width: 100%;
-  background-color: #34495e; /* Darker shade for buttons */
+  background-color: #34495e;
   color: whitesmoke;
   border: none;
   padding: 10px 20px;
@@ -220,10 +225,38 @@
 
 .sidebar-submenu button:hover,
 .sidebar-submenu button:focus {
-  background-color: #4a6075; /* Lighter shade on hover */
+  background-color: #4a6075;
   color: #ffffff;
 }
 
 .sidebar-submenu button:not(:last-child) {
   margin-bottom: 5px;
+}
+
+.view-button {
+  margin-top: 10px;
+}
+
+.image-preview-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.image-preview {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
 }

@@ -12,6 +12,12 @@ const {
   fetchFarmersAddress,
   updateFarmersFarmDetails,
   fetchFarmersFarmData,
+  farmerJobForm,
+  getAllJobs,
+  deleteJob,
+  updateJobDetails,
+  fetchParticularJobDetails,
+  updateJobStatus,
 } = require("../controllers/farmerController");
 const router = express.Router();
 
@@ -46,5 +52,15 @@ router.post(
   updateFarmersFarmDetails
 );
 router.post("/fetchFarmersFarmData", authenticateToken, fetchFarmersFarmData);
+router.post("/farmerJobForm", authenticateToken, farmerJobForm);
+router.post("/getAllJobs", authenticateToken, getAllJobs);
+router.delete("/deleteJob", authenticateToken, deleteJob);
+router.post("/updateJobDetails", authenticateToken, updateJobDetails);
+router.post(
+  "/fetchParticularJobDetails",
+  authenticateToken,
+  fetchParticularJobDetails
+);
+router.post("/updateJobStatus", authenticateToken, updateJobStatus);
 
 module.exports = router;

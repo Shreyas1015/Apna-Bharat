@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IKContext, IKUpload } from "imagekitio-react";
+import { IKContext, IKImage, IKUpload } from "imagekitio-react";
 import axiosInstance from "../API/axiosInstance";
 import secureLocalStorage from "react-secure-storage";
 import Header from "./Header";
@@ -12,9 +12,12 @@ const UserProfile = () => {
   const [aadharCardFront, setAadharCardFront] = useState("");
   const [aadharCardBack, setAadharCardBack] = useState("");
   const [userData, setUserData] = useState([]);
+  const [profileIMG, setProfileIMG] = useState("");
+  const [previousEmail, setPreviousEmail] = useState("");
+  const [updatedProfileIMG, setUpdatedProfileIMG] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
     dob: "",
-
     gender: "",
     village: "",
     taluka: "",
@@ -27,31 +30,14 @@ const UserProfile = () => {
     email: "",
     phone_number: "",
   });
-
-  const authenticator = async () => {
-    try {
-      const url = `${process.env.REACT_APP_BASE_URL}/user/drivers_document_auth`;
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Authentication response error text:", errorText); // Log error text from the response
-        throw new Error(
-          `Request failed with status ${response.status}: ${errorText}`
-        );
-      }
-
-      const data = await response.json();
-
-      const { signature, expire, token } = data;
-
-      return { signature, expire, token };
-    } catch (error) {
-      console.error("Authentication request failed:", error); // Log any errors caught
-      throw new Error(`Authentication request failed: ${error.message}`);
-    }
-  };
+  const [updatedProfileData, setUpdatedProfileData] = useState({
+    uid: decryptedUID,
+    name: "",
+    email: "",
+    emailOtp: "",
+    phone_number: "",
+  });
+  const [isImageVisible, setIsImageVisible] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,21 +57,35 @@ const UserProfile = () => {
   };
 
   useEffect(() => {
-    const fetchUserProfileData = async () => {
+    const fetchProfileData = async () => {
       try {
-        const res = await axiosInstance.post(
-          `${process.env.REACT_APP_BASE_URL}/user/fetchUserProfileData`,
+        const response = await axiosInstance.post(
+          `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersProfileData`,
           { decryptedUID }
         );
-        if (res.status === 200) {
-          setProfileData(res.data);
-        } else {
-          alert("Error Fetching Profile Data !");
+
+        if (response.status === 200) {
+          setProfileData(response.data);
+          setUpdatedProfileData(response.data);
         }
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching Profile Data:", error.message);
       }
     };
+
+    const fetchProfileIMG = async () => {
+      try {
+        const response = await axiosInstance.post(
+          `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersProfileIMG`,
+          { decryptedUID }
+        );
+
+        setUpdatedProfileIMG(response.data.link);
+      } catch (error) {
+        console.error("Error fetching :", error.message);
+      }
+    };
+
     const fetchUserData = async () => {
       try {
         const res = await axiosInstance.post(
@@ -93,20 +93,23 @@ const UserProfile = () => {
           { decryptedUID }
         );
         if (res.status === 200) {
-          setUserData(res.data);
+          setFormData(res.data);
+          setAadharCardBack(res.data.aadharcardback);
+          setAadharCardFront(res.data.aadharcardfront);
         }
       } catch (error) {
         console.log(error);
       }
     };
 
-    fetchUserProfileData();
+    fetchProfileData();
+    fetchProfileIMG();
+
     fetchUserData();
   }, [decryptedUID]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const fullFormData = {
         ...formData,
@@ -136,6 +139,155 @@ const UserProfile = () => {
     navigate("/");
   };
 
+  const handleViewButtonClick = () => {
+    setIsImageVisible(!isImageVisible);
+  };
+
+  const handleEmailVerification = async () => {
+    try {
+      const res = await axiosInstance.post(
+        `${process.env.REACT_APP_BASE_URL}/farmers/sendProfileUpdateEmailVerification`,
+        { decryptedUID }
+      );
+
+      setPreviousEmail(res.data.email);
+      if (res.data.success) {
+        alert(
+          "Email verification code sent successfully to the email you previously registered with"
+        );
+      } else {
+        setErrorMessage("Failed to send email verification code");
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorMessage(
+        "An error occurred while sending email verification code"
+      );
+    }
+  };
+
+  const confirmEmailVerification = async () => {
+    try {
+      const res = await axiosInstance.post(
+        `${process.env.REACT_APP_BASE_URL}/auth/confirmEmail`,
+        {
+          email: previousEmail,
+          emailOtp: updatedProfileData.emailOtp,
+        }
+      );
+
+      if (res.data.success) {
+        alert("Email verified successfully");
+      } else {
+        setErrorMessage("Failed to verify Email Otp");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Invalid OTP");
+      setErrorMessage("Invalid Otp");
+    }
+  };
+
+  const authenticator = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASE_URL}/farmers/drivers_document_auth`
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Request failed with status ${response.status}: ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      const { signature, expire, token } = data;
+      console.log("Authentication parameters:", { signature, expire, token });
+      return { signature, expire, token };
+    } catch (error) {
+      console.error(`Authentication request failed: ${error.message}`);
+      throw new Error(`Authentication request failed: ${error.message}`);
+    }
+  };
+
+  const handleProfileEdit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const verifyEmailRes = await axiosInstance.post(
+        `${process.env.REACT_APP_BASE_URL}/auth/confirmEmail`,
+        {
+          email: previousEmail,
+          emailOtp: updatedProfileData.emailOtp,
+        }
+      );
+
+      if (!verifyEmailRes.data.success) {
+        setErrorMessage("Email OTP verification failed");
+        return;
+      }
+
+      const res = await axiosInstance.post(
+        `${process.env.REACT_APP_BASE_URL}/farmers/updateFarmersProfile`,
+        { updatedProfileData, decryptedUID }
+      );
+
+      if (res.status === 200) {
+        if (updatedProfileData.email !== previousEmail) {
+          alert(
+            "Profile has been updated. Please login again with your updated email."
+          );
+          window.localStorage.removeItem("@secure.n.user_type");
+          window.localStorage.removeItem("@secure.n.uid");
+          navigate("/");
+        } else {
+          alert("Profile is Updated Successfully");
+          window.location.reload();
+        }
+      } else {
+        console.error("Error updating profile");
+        alert("Error updating profile");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleProfileImg = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = {
+        profile_img: profileIMG,
+        uid: decryptedUID,
+      };
+
+      const res = await axiosInstance.post(
+        `${process.env.REACT_APP_BASE_URL}/farmers/uploadFarmersProfileImage`,
+        { formData, decryptedUID }
+      );
+
+      if (res.status === 200) {
+        console.log("Profile Image uploaded!");
+        alert("Profile Image uploaded!");
+        window.location.reload();
+      } else {
+        console.error("Error uploading Profile Image");
+        alert("An error occurred while uploading your Profile Image.");
+      }
+    } catch (error) {
+      console.error("Error: ", error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date)) return "";
+    const formattedDate = date.toISOString().split("T")[0];
+    return formattedDate;
+  };
+
   if (!uid) {
     return (
       <>
@@ -149,60 +301,142 @@ const UserProfile = () => {
     );
   }
 
-  const publicKey = "public_ytabO1+xt+yMhICKtVeVGbWi/u8=";
-  const urlEndpoint = "https://ik.imagekit.io/xmzipbjn36";
+  const publicKey = process.env.REACT_APP_IMAGEKIT_PUBLIC_KEY;
+  const urlEndpoint = process.env.REACT_APP_IMAGEKIT_URL_ENDPOINT;
 
   return (
     <>
       <div className="container-fluid">
         <Header pageName="User Profile" />
+        <div className="profile-div mb-4 p-3 border  border-dark border-1 rounded-5">
+          <div className="row my-5">
+            <div className="col-lg-3 border-end border-dark border-2 text-center">
+              <img
+                className="img-fluid profile-img"
+                src={updatedProfileIMG}
+                alt="Not available"
+              />
+              <form onSubmit={handleProfileImg}>
+                <input type="hidden" name="uid" value={decryptedUID} />
+                <div className="input-group me-5 py-3">
+                  <IKContext
+                    publicKey="public_ytabO1+xt+yMhICKtVeVGbWi/u8="
+                    urlEndpoint="https://ik.imagekit.io/TriptoServices"
+                    authenticator={authenticator}
+                  >
+                    <IKUpload
+                      required
+                      className="form-control"
+                      fileName={`${decryptedUID}_passengerProfileIMG.jpg`}
+                      folder="Home/Tripto/passengers"
+                      tags={["tag1"]}
+                      useUniqueFileName={true}
+                      isPrivateFile={false}
+                      onSuccess={(r) => {
+                        setProfileIMG(r.url);
+                        alert("Uploaded");
+                      }}
+                      onError={(e) => console.log(e)}
+                    />
+                  </IKContext>
+                  <input
+                    type="submit"
+                    className="input-group-text blue-buttons"
+                    value="Edit"
+                  />
+                </div>
+              </form>
+            </div>
+            <div className="col-lg-9 p-4 ">
+              <form onSubmit={handleProfileEdit}>
+                <input type="hidden" name="uid" value={decryptedUID} />
+
+                <div className="input-group mb-4">
+                  <span className="input-group-text">Name</span>
+                  <input
+                    name="name"
+                    type="text"
+                    className="form-control"
+                    required
+                    value={updatedProfileData.name || ""}
+                    placeholder={profileData.name}
+                    onChange={handleProfileChange}
+                  />
+                </div>
+
+                <div className="row">
+                  <div className="col-lg-6">
+                    <div className="input-group mb-4">
+                      <span className="input-group-text">Email</span>
+                      <input
+                        name="email"
+                        type="text"
+                        className="form-control"
+                        required
+                        value={updatedProfileData.email || ""}
+                        placeholder={profileData.email}
+                        onChange={handleProfileChange}
+                      />
+                      <button
+                        className="btn btn-sm"
+                        type="button"
+                        style={{ backgroundColor: "#0bbfe0", color: "white" }}
+                        onClick={handleEmailVerification}
+                      >
+                        Send OTP
+                      </button>
+                    </div>
+                  </div>
+                  <div className="col-lg-6">
+                    <div className="input-group">
+                      <input
+                        type="text"
+                        id="emailOtp"
+                        name="emailOtp"
+                        className="form-control"
+                        value={updatedProfileData.emailOtp || ""}
+                        placeholder="Enter your OTP here"
+                        onChange={handleProfileChange}
+                        required
+                      />
+
+                      <button
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#0bbfe0", color: "white" }}
+                        type="button"
+                        onClick={confirmEmailVerification}
+                      >
+                        Verify OTP
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="input-group mb-4">
+                  <span className="input-group-text">Phone Number</span>
+                  <input
+                    name="phone_number"
+                    type="text"
+                    className="form-control"
+                    required
+                    value={updatedProfileData.phone_number || ""}
+                    placeholder={profileData.phone_number}
+                    onChange={handleProfileChange}
+                  />
+                </div>
+
+                <br />
+                <input
+                  type="submit"
+                  value="Edit Profile"
+                  className="form-control blue-buttons mt-4"
+                />
+              </form>
+            </div>
+          </div>
+        </div>
         <div className="container p-4 border rounded-5 border-dark">
           <div className="row">
-            <div className="col-lg-4">
-              <div className="mb-3">
-                <label className="form-label fw-bolder" htmlFor="name">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  className="form-control"
-                  onChange={handleProfileChange}
-                  value={profileData.name || ""}
-                  readOnly
-                />
-              </div>
-            </div>
-            <div className="col-lg-4">
-              <div className="mb-3">
-                <label className="form-label fw-bolder" htmlFor="phone_number">
-                  Phone No.
-                </label>
-                <input
-                  type="text"
-                  name="phone_number"
-                  onChange={handleProfileChange}
-                  className="form-control"
-                  value={profileData.phone_number || ""}
-                  readOnly
-                />
-              </div>
-            </div>
-            <div className="col-lg-4">
-              <div className="mb-3">
-                <label className="form-label fw-bolder" htmlFor="email">
-                  Email
-                </label>
-                <input
-                  type="text"
-                  name="email"
-                  onChange={handleProfileChange}
-                  className="form-control"
-                  value={profileData.email || ""}
-                  readOnly
-                />
-              </div>
-            </div>
             <form onSubmit={handleSubmit}>
               <div className="row">
                 <div className="col-lg-6">
@@ -229,6 +463,38 @@ const UserProfile = () => {
                         }}
                         onError={(e) => console.log(e)}
                       />
+                      {aadharCardFront && (
+                        <>
+                          <button
+                            onClick={handleViewButtonClick}
+                            className="view-button"
+                            type="button"
+                          >
+                            View
+                          </button>
+                          {isImageVisible && (
+                            <div
+                              className="image-preview-backdrop"
+                              onClick={handleViewButtonClick}
+                            >
+                              <div className="image-preview">
+                                <IKImage
+                                  src={aadharCardFront}
+                                  alt={`${profileData.name} Aadhar Card Front`}
+                                  transformation={[
+                                    {
+                                      height: 500,
+                                      width: 500,
+                                      quality: 90,
+                                    },
+                                  ]}
+                                  loading="lazy"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </IKContext>
                   </div>
                 </div>
@@ -256,6 +522,38 @@ const UserProfile = () => {
                         }}
                         onError={(e) => console.log(e)}
                       />
+                      {aadharCardBack && (
+                        <>
+                          <button
+                            onClick={handleViewButtonClick}
+                            className="view-button"
+                            type="button"
+                          >
+                            View
+                          </button>
+                          {isImageVisible && (
+                            <div
+                              className="image-preview-backdrop"
+                              onClick={handleViewButtonClick}
+                            >
+                              <div className="image-preview">
+                                <IKImage
+                                  src={aadharCardBack}
+                                  alt={`${profileData.name} Aadhar Card Back`}
+                                  transformation={[
+                                    {
+                                      height: 500,
+                                      width: 500,
+                                      quality: 90,
+                                    },
+                                  ]}
+                                  loading="lazy"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </IKContext>
                   </div>
                 </div>
@@ -273,7 +571,7 @@ const UserProfile = () => {
                       name="dob"
                       className="form-control"
                       onChange={handleChange}
-                      value={formData.dob}
+                      value={formatDate(formData.dob)}
                       required
                     />
                   </div>
@@ -344,7 +642,6 @@ const UserProfile = () => {
 
               <div className="row">
                 <div className="col-lg-8">
-                  {" "}
                   <div className="mb-3">
                     <label className="form-label fw-bolder" htmlFor="state">
                       State:

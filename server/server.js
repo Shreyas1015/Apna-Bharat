@@ -3,6 +3,7 @@ const express = require("express");
 const authRoutes = require("./src/routes/authRoute");
 const userRoute = require("./src/routes/userRoute");
 const farmerRoute = require("./src/routes/farmerRoute");
+const laboursRoute = require("./src/routes/laboursRoute");
 const cookieParser = require("cookie-parser");
 const errorMiddleware = require("./src/middlewares/errorMiddleware");
 
@@ -24,7 +25,7 @@ app.use("/auth", authRoutes);
 app.use("/admin", authRoutes);
 app.use("/user", userRoute);
 app.use("/resident", authRoutes);
-app.use("/labours", authRoutes);
+app.use("/labours", laboursRoute);
 app.use("/farmers", farmerRoute);
 
 const endpointSecret =

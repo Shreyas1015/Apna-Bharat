@@ -15,6 +15,8 @@ import LaboursProfilePage from "./Pages/Labours/LaboursProfilePage";
 import LaboursJobListingPage from "./Pages/Labours/LaboursJobListingPage";
 import LaboursEquipmentRenalsPage from "./Pages/Labours/LaboursEquipmentRenalsPage";
 import ResidentReportIssuePage from "./Pages/Residents/ResidentReportIssuePage";
+import FarmersJobFormPage from "./Pages/Farmers/FarmersJobFormPage";
+import FarmersJobEditPage from "./Pages/Farmers/FarmersJobEditPage";
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -75,8 +77,26 @@ const App = () => {
               path="/farmers/farmers-equipment-rental"
               element={<FarmersEquipmentRentalPage />}
             />
+            <Route path="/farmers/job-form" element={<FarmersJobFormPage />} />
+            <Route
+              path="/farmers/edit-job-form"
+              element={<FarmersJobEditPage />}
+            />
+            {/* <Route
+              path="/farmers/applied-applications"
+              element={<FarmersAppliedApplicationsPage />}
+            />
+            <Route
+              path="/farmers/labourer-management"
+              element={<FarmersLabourerManagementPage />}
+            />
+            <Route
+              path="/farmers/payment-management"
+              element={<FarmersPaymentManagementPage />}
+            /> */}
 
             {/* Labour */}
+
             <Route
               path="/labours/labours-profile"
               element={<LaboursProfilePage />}
