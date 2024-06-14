@@ -8,13 +8,7 @@ const LaboursProfileContent = () => {
   const navigate = useNavigate();
   const uid = localStorage.getItem("@secure.n.uid");
   const decryptedUID = secureLocalStorage.getItem("uid");
-  const [addressData, setAddressData] = useState({
-    village: "",
-    taluka: "",
-    district: "",
-    state: "",
-    pincode: "",
-  });
+
   const [updatedAddressData, setUpdatedAddressData] = useState({
     village: "",
     taluka: "",
@@ -27,31 +21,23 @@ const LaboursProfileContent = () => {
     email: "",
     phone_number: "",
   });
-  const [updatedProfileData, setUpdatedProfileData] = useState({
-    uid: decryptedUID,
-    name: "",
-    email: "",
-    emailOtp: "",
-    phone_number: "",
-  });
-
   const [additionalInfo, setAdditionalInfo] = useState({
     skills: "",
-    qualifications: "",
+    qualification: "",
     experience: "",
   });
+  const [jobData, setJobData] = useState([]);
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const response = await axiosInstance.post(
-          `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersProfileData`,
+          `${process.env.REACT_APP_BASE_URL}/user/fetchUserProfileData`,
           { decryptedUID }
         );
 
         if (response.status === 200) {
           setProfileData(response.data);
-          setUpdatedProfileData(response.data);
         }
       } catch (error) {
         console.error("Error fetching Profile Data:", error.message);
@@ -64,7 +50,7 @@ const LaboursProfileContent = () => {
           `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersAddress`,
           { decryptedUID }
         );
-        setAddressData(res.data);
+
         setUpdatedAddressData(res.data);
       } catch (error) {
         console.error("Error fetching Address Data:", error.message);
@@ -82,29 +68,28 @@ const LaboursProfileContent = () => {
         console.error("Error fetching Additional Info:", error.message);
       }
     };
+
+    const fetchPersonalJobDataStatus = async () => {
+      try {
+        const res = await axiosInstance.post(
+          `${process.env.REACT_APP_BASE_URL}/labours/fetchPersonalJobDataStatus`,
+          { decryptedUID }
+        );
+        if (res.status === 200) {
+          setJobData(res.data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
     fetchProfileData();
     fetchAddressData();
     fetchAdditionalInfo();
+    fetchPersonalJobDataStatus();
   }, [decryptedUID]);
 
   const BackToLogin = () => {
     navigate("/");
-  };
-
-  const handleProfileChange = (e) => {
-    const { name, value } = e.target;
-    setProfileData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setUpdatedAddressData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
   };
 
   const handleAdditionalInfoChange = (e) => {
@@ -155,9 +140,8 @@ const LaboursProfileContent = () => {
             type="text"
             className="form-control"
             required
-            value={updatedProfileData.name || ""}
+            value={profileData.name || ""}
             readOnly
-            onChange={handleProfileChange}
           />
         </div>
         <div className="input-group mb-4">
@@ -167,9 +151,8 @@ const LaboursProfileContent = () => {
             type="text"
             className="form-control"
             required
-            value={updatedProfileData.email || ""}
+            value={profileData.email || ""}
             readOnly
-            onChange={handleProfileChange}
           />
         </div>
         <div className="input-group mb-4">
@@ -179,9 +162,8 @@ const LaboursProfileContent = () => {
             type="text"
             className="form-control"
             required
-            value={updatedProfileData.phone_number || ""}
+            value={profileData.phone_number || ""}
             readOnly
-            onChange={handleProfileChange}
           />
         </div>
       </div>
@@ -211,9 +193,9 @@ const LaboursProfileContent = () => {
                 </label>
                 <input
                   type="text"
-                  name="qualifications"
+                  name="qualification"
                   className="form-control"
-                  value={additionalInfo.qualifications || ""}
+                  value={additionalInfo.qualification || ""}
                   onChange={handleAdditionalInfoChange}
                   id="qualifications"
                 />
@@ -254,8 +236,6 @@ const LaboursProfileContent = () => {
                 type="text"
                 name="village"
                 value={updatedAddressData.village || ""}
-                placeholder={addressData.village}
-                onChange={handleAddressChange}
                 className="form-control"
                 id="inputEmail4"
                 readOnly
@@ -269,8 +249,6 @@ const LaboursProfileContent = () => {
                 type="text"
                 name="taluka"
                 value={updatedAddressData.taluka || ""}
-                onChange={handleAddressChange}
-                placeholder={addressData.taluka}
                 className="form-control"
                 id="inputPassword4"
                 readOnly
@@ -284,8 +262,6 @@ const LaboursProfileContent = () => {
                 type="text"
                 name="district"
                 value={updatedAddressData.district || ""}
-                onChange={handleAddressChange}
-                placeholder={addressData.district}
                 className="form-control"
                 id="inputAddress"
                 readOnly
@@ -300,10 +276,8 @@ const LaboursProfileContent = () => {
                 type="text"
                 id="inputState"
                 className="form-select"
-                placeholder={addressData.state}
                 name="state"
                 value={updatedAddressData.state || ""}
-                onChange={handleAddressChange}
                 readOnly
               />
             </div>
@@ -316,14 +290,47 @@ const LaboursProfileContent = () => {
                 type="text"
                 name="pincode"
                 value={updatedAddressData.pincode || ""}
-                onChange={handleAddressChange}
-                placeholder={addressData.pincode}
                 className="form-control"
                 id="inputZip"
                 readOnly
               />
             </div>
           </div>
+        </div>
+      </div>
+      <div className="job-status mb-4">
+        <h2 className="p-3 border  border-dark border-1 rounded-5 mb-4">
+          Applied Jobs Status
+        </h2>
+        <div className="container-fluid p-3 border  border-dark border-1 rounded-5 mb-4">
+          <table className="table table-bordered  table-responsive">
+            <thead className="text-center">
+              <tr>
+                <th scope="col">Sr No.</th>
+                <th scope="col">Job Title</th>
+                <th scope="col">Status</th>
+                <th scope="col">Applied Date</th>
+              </tr>
+            </thead>
+            <tbody className="text-center">
+              {jobData.map((job, index) => (
+                <tr key={index}>
+                  <th scope="row">{index + 1}</th>
+                  <td>{job.jobtitle}</td>
+                  <td>
+                    {job.job_status === 0
+                      ? "Pending"
+                      : job.job_status === 1
+                      ? "Applied"
+                      : job.job_status === 2
+                      ? "Accepted"
+                      : "Rejected"}
+                  </td>
+                  <td>{new Date(job.applied_date).toDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

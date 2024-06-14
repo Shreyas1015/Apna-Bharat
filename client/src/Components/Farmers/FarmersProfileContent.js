@@ -9,14 +9,6 @@ const FarmersProfileContent = () => {
   const uid = localStorage.getItem("@secure.n.uid");
   const decryptedUID = secureLocalStorage.getItem("uid");
   const decryptedUT = secureLocalStorage.getItem("user_type");
-
-  const [addressData, setAddressData] = useState({
-    village: "",
-    taluka: "",
-    district: "",
-    state: "",
-    pincode: "",
-  });
   const [updatedAddressData, setUpdatedAddressData] = useState({
     village: "",
     taluka: "",
@@ -55,7 +47,7 @@ const FarmersProfileContent = () => {
           `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersAddress`,
           { decryptedUID }
         );
-        setAddressData(res.data);
+
         setUpdatedAddressData(res.data);
       } catch (error) {
         console.error("Error fetching Address Data:", error.message);
@@ -215,7 +207,6 @@ const FarmersProfileContent = () => {
                   type="text"
                   name="village"
                   value={updatedAddressData.village || ""}
-                  placeholder={addressData.village}
                   onChange={handleAddressChange}
                   className="form-control"
                   id="inputEmail4"
@@ -230,7 +221,6 @@ const FarmersProfileContent = () => {
                   name="taluka"
                   value={updatedAddressData.taluka || ""}
                   onChange={handleAddressChange}
-                  placeholder={addressData.taluka}
                   className="form-control"
                   id="inputPassword4"
                 />
@@ -244,7 +234,6 @@ const FarmersProfileContent = () => {
                   name="district"
                   value={updatedAddressData.district || ""}
                   onChange={handleAddressChange}
-                  placeholder={addressData.district}
                   className="form-control"
                   id="inputAddress"
                 />
@@ -258,7 +247,6 @@ const FarmersProfileContent = () => {
                   type="text"
                   id="inputState"
                   className="form-select"
-                  placeholder={addressData.state}
                   name="state"
                   value={updatedAddressData.state || ""}
                   onChange={handleAddressChange}
@@ -274,7 +262,6 @@ const FarmersProfileContent = () => {
                   name="pincode"
                   value={updatedAddressData.pincode || ""}
                   onChange={handleAddressChange}
-                  placeholder={addressData.pincode}
                   className="form-control"
                   id="inputZip"
                 />

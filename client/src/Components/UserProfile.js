@@ -11,7 +11,6 @@ const UserProfile = () => {
   const decryptedUID = secureLocalStorage.getItem("uid");
   const [aadharCardFront, setAadharCardFront] = useState("");
   const [aadharCardBack, setAadharCardBack] = useState("");
-  const [userData, setUserData] = useState([]);
   const [profileIMG, setProfileIMG] = useState("");
   const [previousEmail, setPreviousEmail] = useState("");
   const [updatedProfileIMG, setUpdatedProfileIMG] = useState("");
@@ -28,13 +27,6 @@ const UserProfile = () => {
   const [profileData, setProfileData] = useState({
     name: "",
     email: "",
-    phone_number: "",
-  });
-  const [updatedProfileData, setUpdatedProfileData] = useState({
-    uid: decryptedUID,
-    name: "",
-    email: "",
-    emailOtp: "",
     phone_number: "",
   });
   const [isImageVisible, setIsImageVisible] = useState(false);
@@ -60,13 +52,12 @@ const UserProfile = () => {
     const fetchProfileData = async () => {
       try {
         const response = await axiosInstance.post(
-          `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersProfileData`,
+          `${process.env.REACT_APP_BASE_URL}/user/fetchUserProfileData`,
           { decryptedUID }
         );
 
         if (response.status === 200) {
           setProfileData(response.data);
-          setUpdatedProfileData(response.data);
         }
       } catch (error) {
         console.error("Error fetching Profile Data:", error.message);
@@ -76,7 +67,7 @@ const UserProfile = () => {
     const fetchProfileIMG = async () => {
       try {
         const response = await axiosInstance.post(
-          `${process.env.REACT_APP_BASE_URL}/farmers/fetchFarmersProfileIMG`,
+          `${process.env.REACT_APP_BASE_URL}/user/fetchUserProfileIMG`,
           { decryptedUID }
         );
 
@@ -104,7 +95,6 @@ const UserProfile = () => {
 
     fetchProfileData();
     fetchProfileIMG();
-
     fetchUserData();
   }, [decryptedUID]);
 
@@ -172,7 +162,7 @@ const UserProfile = () => {
         `${process.env.REACT_APP_BASE_URL}/auth/confirmEmail`,
         {
           email: previousEmail,
-          emailOtp: updatedProfileData.emailOtp,
+          emailOtp: profileData.emailOtp,
         }
       );
 
@@ -219,7 +209,7 @@ const UserProfile = () => {
         `${process.env.REACT_APP_BASE_URL}/auth/confirmEmail`,
         {
           email: previousEmail,
-          emailOtp: updatedProfileData.emailOtp,
+          emailOtp: profileData.emailOtp,
         }
       );
 
@@ -229,12 +219,12 @@ const UserProfile = () => {
       }
 
       const res = await axiosInstance.post(
-        `${process.env.REACT_APP_BASE_URL}/farmers/updateFarmersProfile`,
-        { updatedProfileData, decryptedUID }
+        `${process.env.REACT_APP_BASE_URL}/user/updateUsersProfile`,
+        { profileData, decryptedUID }
       );
 
       if (res.status === 200) {
-        if (updatedProfileData.email !== previousEmail) {
+        if (profileData.email !== previousEmail) {
           alert(
             "Profile has been updated. Please login again with your updated email."
           );
@@ -263,7 +253,7 @@ const UserProfile = () => {
       };
 
       const res = await axiosInstance.post(
-        `${process.env.REACT_APP_BASE_URL}/farmers/uploadFarmersProfileImage`,
+        `${process.env.REACT_APP_BASE_URL}/user/uploadUserProfileImage`,
         { formData, decryptedUID }
       );
 
@@ -320,8 +310,8 @@ const UserProfile = () => {
                 <input type="hidden" name="uid" value={decryptedUID} />
                 <div className="input-group me-5 py-3">
                   <IKContext
-                    publicKey="public_ytabO1+xt+yMhICKtVeVGbWi/u8="
-                    urlEndpoint="https://ik.imagekit.io/TriptoServices"
+                    publicKey={publicKey}
+                    urlEndpoint={urlEndpoint}
                     authenticator={authenticator}
                   >
                     <IKUpload
@@ -333,7 +323,7 @@ const UserProfile = () => {
                       useUniqueFileName={true}
                       isPrivateFile={false}
                       onSuccess={(r) => {
-                        setProfileIMG(r.url);
+                        setProfileIMG(r.url || "");
                         alert("Uploaded");
                       }}
                       onError={(e) => console.log(e)}
@@ -358,7 +348,7 @@ const UserProfile = () => {
                     type="text"
                     className="form-control"
                     required
-                    value={updatedProfileData.name || ""}
+                    value={profileData.name || ""}
                     placeholder={profileData.name}
                     onChange={handleProfileChange}
                   />
@@ -373,7 +363,7 @@ const UserProfile = () => {
                         type="text"
                         className="form-control"
                         required
-                        value={updatedProfileData.email || ""}
+                        value={profileData.email || ""}
                         placeholder={profileData.email}
                         onChange={handleProfileChange}
                       />
@@ -394,7 +384,7 @@ const UserProfile = () => {
                         id="emailOtp"
                         name="emailOtp"
                         className="form-control"
-                        value={updatedProfileData.emailOtp || ""}
+                        value={profileData.emailOtp || ""}
                         placeholder="Enter your OTP here"
                         onChange={handleProfileChange}
                         required
@@ -419,7 +409,7 @@ const UserProfile = () => {
                     type="text"
                     className="form-control"
                     required
-                    value={updatedProfileData.phone_number || ""}
+                    value={profileData.phone_number || ""}
                     placeholder={profileData.phone_number}
                     onChange={handleProfileChange}
                   />
@@ -561,7 +551,6 @@ const UserProfile = () => {
 
               <div className="row">
                 <div className="col-lg-6">
-                  {" "}
                   <div className="mb-3">
                     <label className="form-label fw-bolder" htmlFor="dob">
                       Date of Birth:
@@ -571,7 +560,7 @@ const UserProfile = () => {
                       name="dob"
                       className="form-control"
                       onChange={handleChange}
-                      value={formatDate(formData.dob)}
+                      value={formatDate(formData.dob) || ""}
                       required
                     />
                   </div>
@@ -587,9 +576,8 @@ const UserProfile = () => {
                       name="gender"
                       className="form-control"
                       onChange={handleChange}
-                      value={formData.gender}
+                      value={formData.gender || ""}
                       required
-                      placeholder={userData.gender}
                     />
                   </div>
                 </div>
@@ -604,9 +592,8 @@ const UserProfile = () => {
                   name="village"
                   className="form-control"
                   onChange={handleChange}
-                  value={formData.village}
+                  value={formData.village || ""}
                   required
-                  placeholder={userData.village}
                 />
               </div>
 
@@ -619,9 +606,8 @@ const UserProfile = () => {
                   name="taluka"
                   className="form-control"
                   onChange={handleChange}
-                  value={formData.taluka}
+                  value={formData.taluka || ""}
                   required
-                  placeholder={userData.taluka}
                 />
               </div>
 
@@ -634,9 +620,8 @@ const UserProfile = () => {
                   name="district"
                   className="form-control"
                   onChange={handleChange}
-                  value={formData.district}
+                  value={formData.district || ""}
                   required
-                  placeholder={userData.district}
                 />
               </div>
 
@@ -651,9 +636,8 @@ const UserProfile = () => {
                       name="state"
                       className="form-control"
                       onChange={handleChange}
-                      value={formData.state}
+                      value={formData.state || ""}
                       required
-                      placeholder={userData.state}
                     />
                   </div>
                 </div>
@@ -668,9 +652,8 @@ const UserProfile = () => {
                       name="pincode"
                       className="form-control"
                       onChange={handleChange}
-                      value={formData.pincode}
+                      value={formData.pincode || ""}
                       required
-                      placeholder={userData.pincode}
                     />
                   </div>
                 </div>

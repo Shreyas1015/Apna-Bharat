@@ -150,82 +150,6 @@ const fetchFarmersProfileIMG = asyncHand((req, res) => {
   });
 });
 
-const updateFarmersProfile = asyncHand((req, res) => {
-  authenticateUser(req, res, () => {
-    const { updatedProfileData, decryptedUID } = req.body;
-
-    const updateQuery =
-      "UPDATE users SET name = $1, email = $2, phone_number = $3 WHERE uid = $4";
-    const updateValues = [
-      updatedProfileData.name,
-      updatedProfileData.email,
-      updatedProfileData.phone_number,
-      decryptedUID,
-    ];
-
-    pool.query(updateQuery, updateValues, (err, result) => {
-      if (err) {
-        console.error(`Error updating profile: ${err}`);
-        return res.status(500).json({ error: "Server Error" });
-      } else {
-        console.log("Profile updated: ", result);
-        return res
-          .status(200)
-          .json({ message: "Profile Updated Successfully" });
-      }
-    });
-  });
-});
-
-const uploadFarmersProfileImage = asyncHand(async (req, res) => {
-  authenticateUser(req, res, async () => {
-    const { formData, decryptedUID } = req.body;
-
-    try {
-      // First, retrieve the up_id from user_profiles
-      const selectQuery = "SELECT up_id FROM user_profiles WHERE uid = $1";
-      const selectResult = await pool.query(selectQuery, [decryptedUID]);
-
-      if (selectResult.rows.length === 0) {
-        console.error("No user profile found for the given UID:", decryptedUID);
-        return res.status(404).json({ error: "User profile not found" });
-      }
-
-      const upId = selectResult.rows[0].up_id;
-
-      const checkUidQuery =
-        "SELECT COUNT(*) AS count FROM farmers_profile_management WHERE uid = $1";
-      const checkUidResult = await pool.query(checkUidQuery, [decryptedUID]);
-      const uidExists = checkUidResult.rows[0].count > 0;
-
-      if (uidExists) {
-        const updateQuery =
-          "UPDATE farmers_profile_management SET profile_img = $1, up_id = $2 WHERE uid = $3";
-        await pool.query(updateQuery, [
-          formData.profile_img,
-          upId,
-          decryptedUID,
-        ]);
-        console.log("Profile Image and UP_ID Updated");
-        res.status(200).json({ message: "Profile Image and UP_ID Updated" });
-      } else {
-        const insertQuery =
-          "INSERT INTO farmers_profile_management (uid, profile_img, up_id) VALUES ($1, $2, $3)";
-        await pool.query(insertQuery, [
-          decryptedUID,
-          formData.profile_img,
-          upId,
-        ]);
-        console.log("Profile Image and UP_ID Inserted");
-        res.status(200).json({ message: "Profile Image and UP_ID Inserted" });
-      }
-    } catch (error) {
-      console.error("Internal Server error: ", error);
-      res.status(500).json({ error: "Internal Server error" });
-    }
-  });
-});
-
 const updateFarmersAddress = asyncHand((req, res) => {
   authenticateUser(req, res, () => {
     const { decryptedUID, updatedAddressData } = req.body;
@@ -271,9 +195,8 @@ const fetchFarmersAddress = asyncHand((req, res) => {
 const updateFarmersFarmDetails = asyncHand((req, res) => {
   authenticateUser(req, res, () => {
     const { decryptedUID, updatedFarmData } = req.body;
-    console.log("Live Stocks = ", updatedFarmData.live_stocks);
     const updateQuery =
-      "UPDATE farmers_profile_management SET farm_name = $1, farm_size = $2, farm_type = $3, crops_grown = $4, irrigation_methods = $5, storage_facilities = $6, live_stocks = $7::jsonb, pesticides_used = $8::jsonb, farming_methods = $9 WHERE uid = $10";
+      "INSERT INTO farmers_profile_management (uid, farm_name, farm_size, farm_type, crops_grown, irrigation_methods, storage_facilities, live_stocks, pesticides_used, farming_methods) VALUES ($10, $1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9) ON CONFLICT (uid) DO UPDATE SET farm_name = $1, farm_size = $2, farm_type = $3, crops_grown = $4, irrigation_methods = $5, storage_facilities = $6, live_stocks = $7::jsonb, pesticides_used = $8::jsonb, farming_methods = $9 WHERE farmers_profile_management.uid = $10";
 
     const updateValues = [
       updatedFarmData.farm_name,
@@ -351,7 +274,7 @@ const farmerJobForm = asyncHand((req, res) => {
 const getAllJobs = asyncHand((req, res) => {
   authenticateUser(req, res, () => {
     const { decryptedUID } = req.body;
-    const query = "SELECT * FROM jobs WHERE uid = $1";
+    const query = "SELECT * FROM jobs WHERE uid = $1 order by jid desc";
     pool.query(query, [decryptedUID], (err, result) => {
       if (err) {
         console.error(`Error fetching all jobs: ${err}`);
@@ -447,6 +370,54 @@ const updateJobStatus = asyncHand((req, res) => {
   });
 });
 
+const fetchAppliedApplications = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID } = req.body;
+    const query =
+      "SELECT j.*, jat.who_applied, jat.job_status, jat.applied_date, lpm.skills AS labourer_skills, lpm.qualification AS labourer_qualification, lpm.experience AS labourer_experience, up.dob AS labourer_dob, up.gender AS labourer_gender, up.village AS labourer_village, up.taluka AS labourer_taluka, up.district AS labourer_district, up.state AS labourer_state, up.pincode AS labourer_pincode, up.aadharcardfront AS labourer_aadharcardfront, up.aadharcardback AS labourer_aadharcardback, up.profile_img AS labourer_profile_img, u.name AS user_name, u.email AS user_email, u.phone_number AS user_phone_number, u.user_type AS user_type FROM jobs j JOIN jobs_application_tracker jat ON j.jid = jat.jid JOIN labourers_profile_management lpm ON jat.who_applied::integer = lpm.uid JOIN user_profiles up ON lpm.uid = up.uid JOIN users u ON up.uid = u.uid WHERE j.uid = $1; ";
+    pool.query(query, [decryptedUID], (err, result) => {
+      if (err) {
+        console.error("Internal Server Error : ", err);
+        res.status(500).json({ message: "Internal Server error" });
+      } else {
+        res.status(200).json(result.rows);
+      }
+    });
+  });
+});
+
+const rejectApplication = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { jobId } = req.body;
+    const query =
+      "update jobs_application_tracker set job_status = 3 where jid = $1";
+    pool.query(query, [jobId], (err, result) => {
+      if (err) {
+        console.error("Internal Server Error : ", err);
+        res.status(500).json({ message: "Internal Server Error" });
+      } else {
+        res.status(200).json({ message: "Updated jobs_application_tracker" });
+      }
+    });
+  });
+});
+
+const acceptApplication = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { jobId } = req.body;
+    const query =
+      "update jobs_application_tracker set job_status = 2 where jid = $1";
+    pool.query(query, [jobId], (err, result) => {
+      if (err) {
+        console.error("Internal Server Error : ", err);
+        res.status(500).json({ message: "Internal Server Error" });
+      } else {
+        res.status(200).json({ message: "Updated jobs_application_tracker" });
+      }
+    });
+  });
+});
+
 module.exports = {
   drivers_document_auth,
   farmerJobForm,
@@ -454,8 +425,6 @@ module.exports = {
   sendProfileUpdateEmailVerification,
   fetchFarmersProfileData,
   fetchFarmersProfileIMG,
-  updateFarmersProfile,
-  uploadFarmersProfileImage,
   fetchFarmersAddress,
   updateFarmersFarmDetails,
   fetchFarmersFarmData,
@@ -464,4 +433,7 @@ module.exports = {
   updateJobDetails,
   fetchParticularJobDetails,
   updateJobStatus,
+  fetchAppliedApplications,
+  acceptApplication,
+  rejectApplication,
 };

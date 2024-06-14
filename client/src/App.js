@@ -17,6 +17,7 @@ import LaboursEquipmentRenalsPage from "./Pages/Labours/LaboursEquipmentRenalsPa
 import ResidentReportIssuePage from "./Pages/Residents/ResidentReportIssuePage";
 import FarmersJobFormPage from "./Pages/Farmers/FarmersJobFormPage";
 import FarmersJobEditPage from "./Pages/Farmers/FarmersJobEditPage";
+import FarmersAppliedApplicationPage from "./Pages/Farmers/FarmersAppliedApplicationPage";
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -51,7 +52,6 @@ const App = () => {
         <Loading show={loading} />
         <Routes>
           <Route path="/" element={<LoginPage />} />
-
           <Route path="/signup" element={<SignUpPage />} />
           {/* User Section */}
           <Route path="/user-profile" element={<UserProfilePage />} />
@@ -82,10 +82,11 @@ const App = () => {
               path="/farmers/edit-job-form"
               element={<FarmersJobEditPage />}
             />
-            {/* <Route
+            <Route
               path="/farmers/applied-applications"
-              element={<FarmersAppliedApplicationsPage />}
+              element={<FarmersAppliedApplicationPage />}
             />
+            {/*
             <Route
               path="/farmers/labourer-management"
               element={<FarmersLabourerManagementPage />}
@@ -94,9 +95,7 @@ const App = () => {
               path="/farmers/payment-management"
               element={<FarmersPaymentManagementPage />}
             /> */}
-
             {/* Labour */}
-
             <Route
               path="/labours/labours-profile"
               element={<LaboursProfilePage />}
@@ -109,9 +108,7 @@ const App = () => {
               path="/labours/labours-equipment-rentals"
               element={<LaboursEquipmentRenalsPage />}
             />
-
             {/* Resident */}
-
             <Route
               path="/residents/residents-report-issue"
               element={<ResidentReportIssuePage />}

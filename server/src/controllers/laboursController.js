@@ -130,7 +130,7 @@ const getAllJobs = asyncHand(async (req, res) => {
 const applyForJob = asyncHand(async (req, res) => {
   authenticateUser(req, res, () => {
     const { jobId, decryptedUID } = req.body;
-    const applyForJob = `INSERT INTO jobs_application_tracker (jid, who_applied) VALUES ($1, $2)`;
+    const applyForJob = `INSERT INTO jobs_application_tracker (jid, who_applied, job_status) VALUES ($1, $2, 1)`;
     pool.query(applyForJob, [jobId, decryptedUID], (err, result) => {
       if (err) {
         console.log("Error in applyForJob:", err);
@@ -142,9 +142,65 @@ const applyForJob = asyncHand(async (req, res) => {
   });
 });
 
+const fetchJobApplicationTracker = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID } = req.body;
+    const query =
+      "select * from jobs_application_tracker where who_applied = $1";
+    pool.query(query, [decryptedUID], (err, result) => {
+      if (err) {
+        console.error("Error fetching Job Application Tracer : ", err);
+        res.status(500).json({ message: "Internal Server Error" });
+      } else {
+        res.status(200).json(result.rows);
+      }
+    });
+  });
+});
+
+const checkEligibility = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID } = req.body;
+    const query = `SELECT COUNT(*) 
+                   FROM labourers_profile_management 
+                   WHERE uid = $1 AND skills IS NOT NULL AND qualification IS NOT NULL AND experience IS NOT NULL`;
+    pool.query(query, [decryptedUID], (err, result) => {
+      if (err) {
+        console.error("Error in checkEligibility:", err);
+        res.status(500).json({ message: "Internal Server Error" });
+      } else {
+        if (result.rows[0].count > 0) {
+          res.status(200).json({ message: 1 });
+        } else {
+          res.status(200).json({ message: 0 });
+        }
+      }
+    });
+  });
+});
+
+const fetchPersonalJobDataStatus = asyncHand((req, res) => {
+  authenticateUser(req, res, () => {
+    const { decryptedUID } = req.body;
+    const query =
+      "select * from jobs_application_tracker join jobs on jobs.jid = jobs_application_tracker.jid where who_applied = $1";
+    pool.query(query, [decryptedUID], (err, result) => {
+      if (err) {
+        console.error("Internal Server error : ", err);
+        res.status(500).json({ message: "Internal Server Error" });
+      } else {
+        res.status(200).json(result.rows);
+      }
+    });
+  });
+});
+
 module.exports = {
   updateLaboursAdditionalInfo,
   fetchLaboursAdditionalInfo,
   getAllJobs,
   applyForJob,
+  fetchJobApplicationTracker,
+  checkEligibility,
+  fetchPersonalJobDataStatus,
 };

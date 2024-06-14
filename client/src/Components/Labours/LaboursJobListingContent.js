@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import Header from "../Header";
-import { Link } from "react-router-dom";
 import secureLocalStorage from "react-secure-storage";
 import axiosInstance from "../../API/axiosInstance";
 import { IKContext, IKImage } from "imagekitio-react";
+import toast from "react-hot-toast";
 
 const LaboursJobListingContent = () => {
   const uid = localStorage.getItem("@secure.n.uid");
@@ -11,6 +11,8 @@ const LaboursJobListingContent = () => {
   const [jobs, setJobs] = useState([]);
   const [visibleImage, setVisibleImage] = useState({});
   const [appliedJobs, setAppliedJobs] = useState({});
+  const [jobTracker, setJobTracker] = useState([]);
+  const [isEligible, setIsEligible] = useState(false);
 
   useEffect(() => {
     const getAllFarmersJobApplications = async () => {
@@ -24,7 +26,45 @@ const LaboursJobListingContent = () => {
         console.log(error);
       }
     };
+
+    const fetchJobApplicationTracker = async () => {
+      try {
+        const res = await axiosInstance.post(
+          `${process.env.REACT_APP_BASE_URL}/labours/fetchJobApplicationTracker`,
+          { decryptedUID }
+        );
+        const appliedJobsData = res.data.reduce((acc, curr) => {
+          acc[curr.jid] = true;
+          return acc;
+        }, {});
+        setAppliedJobs(appliedJobsData);
+        setJobTracker(res.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const checkEligibility = async () => {
+      try {
+        const res = await axiosInstance.post(
+          `${process.env.REACT_APP_BASE_URL}/labours/checkEligibility`,
+          { decryptedUID }
+        );
+        if (res.data.message === 1) {
+          console.log("Eligible");
+          setIsEligible(true);
+        } else if (res.data.message === 0) {
+          console.log(" Not Eligible");
+          setIsEligible(false);
+        }
+      } catch (error) {
+        console.log(error);
+        toast.error("Error Checking eligibility");
+      }
+    };
     getAllFarmersJobApplications();
+    fetchJobApplicationTracker();
+    checkEligibility();
   }, [decryptedUID]);
 
   const authenticator = async () => {
@@ -61,7 +101,16 @@ const LaboursJobListingContent = () => {
   };
 
   const handleApply = async (jobId) => {
-    if (appliedJobs[jobId]) return; // Prevent multiple submissions
+    if (!isEligible) {
+      toast.error(
+        "You are not eligible to apply for this job. Please Fill In Your Details In Labourers Profile Section"
+      );
+      return;
+    }
+    if (appliedJobs[jobId]) {
+      alert("You have already applied for this job.");
+      return;
+    }
 
     try {
       const response = await axiosInstance.post(
@@ -210,7 +259,7 @@ const LaboursJobListingContent = () => {
                     onClick={() => handleApply(job.jid)}
                     disabled={appliedJobs[job.jid]}
                   >
-                    Apply
+                    {appliedJobs[job.jid] ? "Already Applied" : "Apply"}
                   </button>
                 </div>
               </div>

@@ -104,17 +104,7 @@ const JobForm = () => {
       );
       if (res.status === 200) {
         alert("Job Posted Successfully");
-        setFormData({
-          jobTitle: "",
-          jobDescription: "",
-          jobLocation: "",
-          startDate: "",
-          endDate: "",
-          workingHours: "",
-          wageSalary: "",
-          qualificationsSkills: "",
-          applicationDeadline: "",
-        });
+        window.location.reload();
       }
     } catch (error) {
       console.log(error);

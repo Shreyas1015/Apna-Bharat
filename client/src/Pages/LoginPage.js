@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axiosInstance from "../API/axiosInstance";
 import secureLocalStorage from "react-secure-storage";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -28,13 +29,13 @@ const LoginPage = () => {
       );
 
       if (res.data.success) {
-        alert("Email verification code sent successfully");
+        toast.success("Email verification code sent successfully");
       } else {
         setErrorMessage("Failed to send email verification code");
       }
     } catch (error) {
       console.error(error);
-      alert("User Not Registered");
+      toast.error("User Not Registered");
       setErrorMessage(
         "An error occurred while sending email verification code"
       );
@@ -52,13 +53,13 @@ const LoginPage = () => {
       );
 
       if (res.data.success) {
-        alert("Email verified successfully");
+        toast.success("Email verified successfully");
       } else {
         setErrorMessage("Failed to verify Email Otp");
       }
     } catch (error) {
       console.error(error);
-      alert("Invalid OTP");
+      toast.error("Invalid OTP");
       setErrorMessage("Invalid Otp");
     }
   };
@@ -109,13 +110,13 @@ const LoginPage = () => {
         navigate(`/not-found`);
       }
 
-      alert("Logged In Successfully");
+      toast.success("Logged In Successfully");
     } catch (error) {
       console.error(error);
       if (error.response && error.response.data && error.response.data.error) {
         setErrorMessage(error.response.data.error);
       } else {
-        setErrorMessage("An error occurred during login.");
+        toast.error("An error occurred during login.");
       }
     }
   };

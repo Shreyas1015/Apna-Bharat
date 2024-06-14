@@ -6,8 +6,6 @@ const {
   drivers_document_auth,
   fetchFarmersProfileData,
   fetchFarmersProfileIMG,
-  uploadFarmersProfileImage,
-  updateFarmersProfile,
   updateFarmersAddress,
   fetchFarmersAddress,
   updateFarmersFarmDetails,
@@ -18,6 +16,9 @@ const {
   updateJobDetails,
   fetchParticularJobDetails,
   updateJobStatus,
+  fetchAppliedApplications,
+  rejectApplication,
+  acceptApplication,
 } = require("../controllers/farmerController");
 const router = express.Router();
 
@@ -37,13 +38,7 @@ router.post(
   authenticateToken,
   fetchFarmersProfileIMG
 );
-router.post("/updateFarmersProfile", authenticateToken, updateFarmersProfile);
 
-router.post(
-  "/uploadFarmersProfileImage",
-  authenticateToken,
-  uploadFarmersProfileImage
-);
 router.post("/fetchFarmersAddress", authenticateToken, fetchFarmersAddress);
 router.post("/updateFarmersAddress", authenticateToken, updateFarmersAddress);
 router.post(
@@ -62,5 +57,12 @@ router.post(
   fetchParticularJobDetails
 );
 router.post("/updateJobStatus", authenticateToken, updateJobStatus);
+router.post("/rejectApplication", authenticateToken, rejectApplication);
+router.post("/acceptApplication", authenticateToken, acceptApplication);
+router.post(
+  "/fetchAppliedApplications",
+  authenticateToken,
+  fetchAppliedApplications
+);
 
 module.exports = router;
